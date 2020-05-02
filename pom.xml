@@ -14,6 +14,14 @@
     <maven.compiler.source>1.8</maven.compiler.source>
   </properties>
 
+  <distributionManagement>
+    <repository>
+      <id>github</id>
+      <name>GitHub TrollskogenMC Apache Maven Packages</name>
+      <url>https://maven.pkg.github.com/TrollskogenMC/versioned-config</url>
+    </repository>
+  </distributionManagement>
+
   <repositories>
     <repository>
       <id>spigot-repo</id>
