@@ -9,6 +9,11 @@ public class Operation<T extends Enum<T>> {
     this.id = id;
   }
 
+  public Operation(Type type) {
+    this.type = type;
+    this.id = null;
+  }
+
   public Type getType() {
     return type;
   }
@@ -19,6 +24,7 @@ public class Operation<T extends Enum<T>> {
 
   protected enum Type {
     ADD,
-    REMOVE
+    REMOVE,
+    BUMP_VERSION
   }
 }

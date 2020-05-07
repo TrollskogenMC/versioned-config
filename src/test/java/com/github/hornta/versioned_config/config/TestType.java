@@ -10,7 +10,7 @@ import org.junit.Test;
 
 import java.util.Collections;
 
-public class TypeSpec {
+public class TestType {
   @Test
   public void Test_CorrectType_Boolean() {
     Assert.assertTrue(Type.BOOLEAN.isCorrectType(false));

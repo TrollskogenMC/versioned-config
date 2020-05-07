@@ -8,54 +8,53 @@ import java.util.Map;
 public class Patch<T extends Enum<T>> {
   private final Map<T, Node<T>> nodes;
   private final List<Operation<T>> operations;
-  private String validationError;
+  private final int version;
 
-  public Patch() {
+  public Patch(int version) {
     this.nodes = new HashMap<>();
     this.operations = new LinkedList<>();
+    this.operations.add(new Operation<>(Operation.Type.BUMP_VERSION));
+    this.version = version;
   }
 
   public void set(T id, String path, Object value, Type type) {
     Node<T> node = new Node<>(id, path, value, type);
     nodes.put(id, node);
-    operations.add(new Operation<>(Operation.Type.ADD, id));
+    operations.add(operations.size() - 1, new Operation<>(Operation.Type.ADD, id));
   }
 
   public void unset(T id) {
-    operations.add(new Operation<>(Operation.Type.REMOVE, id));
+    operations.add(operations.size() - 1, new Operation<>(Operation.Type.REMOVE, id));
+  }
+
+  public int getVersion() {
+    return version;
   }
 
   protected Node<T> getNode(T id) {
     return nodes.get(id);
   }
 
-  protected String getValidationError() {
-    return validationError;
-  }
-
-  protected boolean validate() {
+  protected String validate() throws ConfigurationException {
     for(Map.Entry<T, Node<T>> entry : nodes.entrySet()) {
       if(
         entry.getValue().getPath() == null ||
         entry.getValue().getPath().length() == 0
       ) {
-        validationError = "The path of " + entry.getKey().name() + " must not be null or empty.";
-        return false;
+        throw new ConfigurationException("The path of %s must not be null or empty.", entry.getKey().name());
       }
 
       for (char character : entry.getValue().getPath().toCharArray()) {
         if (Character.getType(character) == Character.UPPERCASE_LETTER) {
-          validationError = "The path of " + entry.getKey().name() + " must only contain lowercase characters.";
-          return false;
+          throw new ConfigurationException("The path of %s must only contain lowercase characters.", entry.getKey().name());
         }
       }
 
       if(entry.getValue().getPath().equals(Configuration.VERSION_FIELD)) {
-        validationError = "The path of " + entry.getKey().name() + "can not override version.";
-        return false;
+        throw new ConfigurationException("The path of %s can not override version.", entry.getKey().name());
       }
     }
-    return true;
+    return null;
   }
 
   protected List<Operation<T>> getOperations() {

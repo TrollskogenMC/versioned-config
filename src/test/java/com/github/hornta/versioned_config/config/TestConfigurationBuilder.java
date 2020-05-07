@@ -1,11 +1,7 @@
 package com.github.hornta.versioned_config.config;
 
 import com.github.hornta.versioned_config.*;
-import com.github.hornta.versioned_config.config.migrations.AddFieldVersion;
-import com.github.hornta.versioned_config.config.migrations.InitialVersion;
-import com.github.hornta.versioned_config.config.migrations.RemoveFieldVersion;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.PluginBase;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -16,16 +12,16 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class TestConfigurationBuilder {
-  private PluginBase plugin;
   private File file;
 
   @Before
   public void beforeEach() {
-    plugin = new FakeJavaPlugin();
-    file = new File(plugin.getDataFolder(), "config.yml");
+    file = new File("config.yml");
   }
 
   @After
@@ -34,26 +30,37 @@ public class TestConfigurationBuilder {
     if(!ret) {
       throw new Error();
     }
-    plugin.getDataFolder().delete();
   }
 
   @Test
-  public void createsEmptyFile() throws IOException {
+  public void createsEmptyFile() throws ConfigurationException, IOException {
     Assert.assertFalse(file.exists());
-    ConfigurationBuilder cb = new ConfigurationBuilder(plugin, file);
-    cb.run();
+    ConfigurationBuilder<MyEnum> cb = new ConfigurationBuilder<>(file);
+    cb.create();
     Assert.assertTrue(file.exists());
     List<String> contents = Files.readAllLines(file.toPath(), Charset.defaultCharset());
-    Assert.assertEquals(0, contents.size());
+    Assert.assertEquals(Collections.singletonList(
+      "version: 0"
+    ), contents);
   }
 
   @Test
-  public void buildUp_NoFile() throws IOException {
-    ConfigurationBuilder<MyEnum> cb = new ConfigurationBuilder<>(plugin, file);
-    cb.addVersion(new InitialVersion());
-    cb.addVersion(new AddFieldVersion());
-    cb.addVersion(new RemoveFieldVersion());
-    cb.run();
+  public void buildUp_NoFile() throws IOException, ConfigurationException {
+    ConfigurationBuilder<MyEnum> cb = new ConfigurationBuilder<>(file);
+
+    Patch<MyEnum> patch1 = new Patch<>(1);
+    patch1.set(MyEnum.FOO, "homes", 1, Type.INTEGER);
+
+    Patch<MyEnum> patch2 = new Patch<>(2);
+    patch2.set(MyEnum.BAR, "second_field", "a string value", Type.STRING);
+
+    Patch<MyEnum> patch3 = new Patch<>(3);
+    patch3.unset(MyEnum.FOO);
+
+    cb.addPatch(patch1);
+    cb.addPatch(patch2);
+    cb.addPatch(patch3);
+    cb.create();
 
     List<String> lines = Files.readAllLines(file.toPath(), Charset.defaultCharset());
     Assert.assertEquals(
@@ -66,17 +73,26 @@ public class TestConfigurationBuilder {
   }
 
   @Test
-  public void buildUp_File() throws IOException {
+  public void buildUp_Config_Exist() throws IOException, ConfigurationException {
     YamlConfiguration configuration = new YamlConfiguration();
     configuration.set("version", 3);
     configuration.set("second_field", "a stronger value");
     configuration.save(file);
 
-    ConfigurationBuilder<MyEnum> cb = new ConfigurationBuilder<>(plugin, file);
-    cb.addVersion(new InitialVersion());
-    cb.addVersion(new AddFieldVersion());
-    cb.addVersion(new RemoveFieldVersion());
-    cb.run();
+    ConfigurationBuilder<MyEnum> cb = new ConfigurationBuilder<>(file);
+    Patch<MyEnum> patch1 = new Patch<>(1);
+    patch1.set(MyEnum.FOO, "homes", 1, Type.INTEGER);
+
+    Patch<MyEnum> patch2 = new Patch<>(2);
+    patch2.set(MyEnum.BAR, "second_field", "a string value", Type.STRING);
+
+    Patch<MyEnum> patch3 = new Patch<>(3);
+    patch3.unset(MyEnum.FOO);
+
+    cb.addPatch(patch1);
+    cb.addPatch(patch2);
+    cb.addPatch(patch3);
+    cb.create();
 
     List<String> lines = Files.readAllLines(file.toPath(), Charset.defaultCharset());
     Assert.assertEquals(
@@ -89,22 +105,24 @@ public class TestConfigurationBuilder {
   }
 
   @Test
-  public void returnsQueryableConfiguration() throws IOException {
-    ConfigurationBuilder<MyEnum> cb = new ConfigurationBuilder<>(plugin, file);
-    cb.addVersion(new IConfigVersion<MyEnum>() {
-      @Override
-      public int version() {
-        return 1;
-      }
-
-      @Override
-      public Patch<MyEnum> migrate(Configuration<MyEnum> configuration) {
-        Patch<MyEnum> patch = new Patch<>();
-        patch.set(MyEnum.FOO, "path", "myVal", Type.STRING);
-        return patch;
-      }
-    });
-    Configuration<MyEnum> configuration = cb.run();
+  public void returnsQueryableConfiguration() throws ConfigurationException {
+    ConfigurationBuilder<MyEnum> cb = new ConfigurationBuilder<>(file);
+    Patch<MyEnum> patch = new Patch<>(1);
+    patch.set(MyEnum.FOO, "path", "myVal", Type.STRING);
+    cb.addPatch(patch);
+    Configuration<MyEnum> configuration = cb.create();
     Assert.assertEquals("myVal", configuration.get(MyEnum.FOO));
+  }
+
+  @Test
+  public void Test_RenameField() {
+    ConfigurationBuilder<MyEnum> cb = new ConfigurationBuilder<>(file);
+    Patch<MyEnum> p1 = new Patch<>(1);
+    p1.set(MyEnum.FOO, "field", "foo", Type.STRING);
+    cb.addPatch(p1);
+
+    Patch<MyEnum> p2 = new Patch<>(2);
+    p2.set(MyEnum.BAR, "new_field", "bar", Type.STRING);
+    cb.addPatch();
   }
 }

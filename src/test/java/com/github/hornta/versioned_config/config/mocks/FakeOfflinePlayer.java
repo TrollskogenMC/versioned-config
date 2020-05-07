@@ -1,16 +1,19 @@
-package com.github.hornta.versioned_config.config;
+package com.github.hornta.versioned_config.config.mocks;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Statistic;
+import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class FakeOfflinePlayer implements OfflinePlayer {
+public class FakeOfflinePlayer implements OfflinePlayer, ConfigurationSerializable {
   @Override
   public boolean isOnline() {
     return false;
@@ -18,12 +21,12 @@ public class FakeOfflinePlayer implements OfflinePlayer {
 
   @Override
   public String getName() {
-    return "hornta";
+    return null;
   }
 
   @Override
   public UUID getUniqueId() {
-    return null;
+    return UUID.fromString("084859ed-3139-40a5-a17a-8d94ba29597c");
   }
 
   @Override
@@ -158,7 +161,11 @@ public class FakeOfflinePlayer implements OfflinePlayer {
 
   @Override
   public Map<String, Object> serialize() {
-    return null;
+    Map<String, Object> result = new LinkedHashMap<>();
+
+    result.put("UUID", getUniqueId().toString());
+
+    return result;
   }
 
   @Override

@@ -1,67 +1,43 @@
 package com.github.hornta.versioned_config;
 
-import org.bukkit.plugin.PluginBase;
-
 import java.io.File;
 import java.util.LinkedList;
 
 public class ConfigurationBuilder<T extends Enum<T>> {
-  private final PluginBase plugin;
   private final File file;
-  private final LinkedList<IConfigVersion<T>> versions;
-  private String versionValidationError;
+  private final LinkedList<Patch<T>> patches;
 
-  public ConfigurationBuilder(PluginBase plugin, File file) {
-    this.plugin = plugin;
+  public ConfigurationBuilder(File file) {
     this.file = file;
-    this.versions = new LinkedList<>();
+    this.patches = new LinkedList<>();
   }
 
-  public void addVersion(com.github.hornta.versioned_config.IConfigVersion<T> version) {
-    versions.add(version);
+  public void addPatch(Patch<T> patch) {
+    patches.add(patch);
   }
 
-  public Configuration<T> run() {
-    versions.sort(new VersionSorter());
-    if(!validateVersions()) {
-      plugin.getLogger().severe("Failed validation: " + versionValidationError);
-      return null;
-    }
-    com.github.hornta.versioned_config.Configuration<T> configuration = new com.github.hornta.versioned_config.Configuration<>(plugin, file);
-    configuration.validate();
-    plugin.getLogger().info("Applying versions for " + file.getName());
-    for (com.github.hornta.versioned_config.IConfigVersion<T> migration : versions) {
-      Patch<T> patch = migration.migrate(configuration);
-      boolean validationResult = patch.validate();
-      if(!validationResult) {
-        plugin.getLogger().severe(patch.getValidationError());
-        return null;
-      }
-      configuration.apply(patch);
-      configuration.setVersion(migration.version());
-      if(configuration.getVersion() == migration.version()) {
-        configuration.applyValues();
-        plugin.getLogger().info("Apply values from file to version " + migration.version());
-      }
-      plugin.getLogger().info("Applied version " + migration.version() + " onto " + file.getName());
-    }
-    configuration.validate();
-    configuration.cleanup();
-    configuration.persistToFile();
+  public Configuration<T> create() throws ConfigurationException {
+    // 1. Sort patches from lowest version to highest
+    patches.sort(new PatchSorter<>());
+
+    // 2. Validate patches
+    validatePatchVersions();
+
+    // 3. Create configuration with file and patches
+    Configuration<T> configuration = new Configuration<>(file, patches);
+
+    // 4. Perform a reload which applies the patches
+    configuration.reload();
+
     return configuration;
   }
 
-  private boolean validateVersions() {
-    plugin.getLogger().info("Validating versions");
-    for(int i = 0; i < versions.size(); ++i) {
-      if(versions.get(i).version() != i + 1) {
-        versionValidationError = "Wrong version for " + versions.get(i).getClass().getName() + ". Initial version must be 1 increased by 1 for every version.";
-        return false;
+  private void validatePatchVersions() throws ConfigurationException {
+    for(int i = 0; i < patches.size(); ++i) {
+      if(patches.get(i).getVersion() != i + 1) {
+        throw new ConfigurationException("Wrong version for %s. Initial version must be 1 increased by 1 for every version.", patches.get(i).getClass().getName());
       }
+      patches.get(i).validate();
     }
-
-    plugin.getLogger().info("Validation OK");
-
-    return true;
   }
 }
