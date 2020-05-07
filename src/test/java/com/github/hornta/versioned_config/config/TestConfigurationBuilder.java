@@ -114,15 +114,17 @@ public class TestConfigurationBuilder {
     Assert.assertEquals("myVal", configuration.get(MyEnum.FOO));
   }
 
-  @Test
-  public void Test_RenameField() {
-    ConfigurationBuilder<MyEnum> cb = new ConfigurationBuilder<>(file);
-    Patch<MyEnum> p1 = new Patch<>(1);
-    p1.set(MyEnum.FOO, "field", "foo", Type.STRING);
-    cb.addPatch(p1);
-
-    Patch<MyEnum> p2 = new Patch<>(2);
-    p2.set(MyEnum.BAR, "new_field", "bar", Type.STRING);
-    cb.addPatch();
-  }
+//  @Test
+//  public void Test_RenameField() {
+//    ConfigurationBuilder<MyEnum> cb = new ConfigurationBuilder<>(file);
+//    Patch<MyEnum> p1 = new Patch<>(1, (Configuration c) -> {
+//
+//    });
+//    p1.set(MyEnum.FOO, "field", "foo", Type.STRING);
+//    cb.addPatch(p1);
+//
+//    Patch<MyEnum> p2 = new Patch<>(2);
+//    p2.set(MyEnum.BAR, "new_field", "bar", Type.STRING);
+//    cb.addPatch();
+//  }
 }
