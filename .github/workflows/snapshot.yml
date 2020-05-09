@@ -12,7 +12,7 @@ jobs:
       - name: setup-maven-settings
         uses: s4u/maven-settings-action@v1
         with:
-          servers: '[{"id": "github", "username": "hornta", "password": "${GITHUB_TOKEN}"}]'
+          servers: '[{"id": "github-versioned-config", "username": "hornta", "password": "${GITHUB_TOKEN}"}]'
 
       - name: checkout
         uses: actions/checkout@v1
