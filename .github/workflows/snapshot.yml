@@ -12,7 +12,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v1
 
-      - name: deploy
+      - name: Publish to GitHub Packages
+        run: mvn -B deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: mvn -Dmaven.wagon.http.pool=false clean deploy
