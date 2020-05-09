@@ -1,6 +1,7 @@
 package com.github.hornta.versioned_config;
 
-import com.github.hornta.versioned_config.operations.RenameOperation;
+import com.github.hornta.versioned_config.operations.AddOperation;
+import com.github.hornta.versioned_config.operations.RemoveOperation;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -19,15 +20,11 @@ public class Patch<T extends Enum<T>> {
   public void set(T id, String path, Object value, Type type) {
     Node<T> node = new Node<>(id, path, value, type);
     nodes.put(id, node);
-    addOperation(new Operation<>(Operation.Type.ADD, id));
+    addOperation(new AddOperation<>(id));
   }
 
   public void unset(T id) {
-    addOperation(new Operation<>(Operation.Type.REMOVE, id));
-  }
-
-  public void rename(String currentPath, String newPath) {
-    addOperation(new RenameOperation<>(currentPath, newPath));
+    addOperation(new RemoveOperation<>(id));
   }
 
   public void addOperation(Operation<T> operation) {

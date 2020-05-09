@@ -1,0 +1,23 @@
+name: snapshot
+on: push
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: setup-java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 8
+
+      - name: setup-maven-settings
+        uses: s4u/maven-settings-action@v1
+        with:
+          servers: '[{"id": "github", "username": "TrollskogenMC", "password": "${GITHUB_TOKEN}"}]'
+
+      - name: checkout
+        uses: actions/checkout@v1
+
+      - name: deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: mvn -Dmaven.wagon.http.pool=false clean deploy

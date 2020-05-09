@@ -6,18 +6,6 @@ Usage
 
 - [Install](#install)
 - [Getting started](#getting-started)
-  - [Creating our first command](#creating-our-first-command)
-  - [Arguments](#arguments)
-    - [Custom arguments](#custom-arguments)
-    - [Invalid arguments](#invalid-arguments)
-    - [Missing arguments](#missing-arguments)
-    - [Validating based on previous arguments](#validating-based-on-previous-arguments)
-    - [Tab completion](#tab-completion)
-      - [Tab completion based on previous arguments](#tab-completion-based-on-previous-arguments)
-    - [Default arguments](#default-arguments)
-      - [Static arguments](#static-arguments)
-      - [Dynamic arguments](#dynamic-arguments)
-  - [Permissions](#permissions)
   
 ## Install
 This package is available on Github Packages. Read more [here](https://help.github.com/en/packages/publishing-and-managing-packages/installing-a-package).
@@ -31,4 +19,41 @@ This package is available on Github Packages. Read more [here](https://help.gith
 <br />
 
 ## Getting started
-The configuration object is created by the ConfigurationBuilder so let's set it up.
+Here we've created a plugin with a configuration object. The enum `ConfigKey` is used to access configuration values.
+
+```java
+// MyPlugin.java
+class MyPlugin {
+  private Configuration pluginConfig;
+
+  @Override
+  void onEnable() {
+    File file = new File(getDataFolder(), "config.yml");
+    ConfigurationBuilder<ConfigKey> cb = new ConfigurationBuilder<>(file);
+    cb.addMigration(new Migration(1, () -> {
+      Patch<ConfigKey> patch = new Patch<>();
+      patch.set(ConfigKey.FOO, "foo", true, Type.BOOLEAN);
+      return patch;
+    }));
+    
+    cb.addMigration(new Migration(2, () -> {
+      Patch<ConfigKey> patch = new Patch<>();
+      patch.set(ConfigKey.BAR, "bar", "myValue", Type.STRING);
+      return patch;
+    }));
+    
+    try {
+     pluginConfig = cb.create();
+    } catch (ConfigurationException e) {
+      getLogger().log(Level.SEVERE, "Failed to setup configuration", e);
+      setEnabled(false);
+    }
+  }
+}
+
+// ConfigKey.java
+enum ConfigKey {
+  FOO,
+  BAR
+}
+```

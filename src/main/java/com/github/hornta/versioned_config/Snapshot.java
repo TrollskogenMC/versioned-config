@@ -53,11 +53,11 @@ public class Snapshot<T extends Enum<T>> {
     for(Operation<T> operation : patch.getOperations()) {
       switch (operation.getType()) {
         case ADD:
-          addNodeToConfiguration(patch.getNode(operation.getId()));
+          addNode(patch.getNode(operation.getId()));
           break;
 
         case REMOVE:
-          removeNodeFromConfiguration(operation.getId());
+          removeNode(operation.getId());
           break;
         default:
       }
@@ -72,7 +72,7 @@ public class Snapshot<T extends Enum<T>> {
     }
   }
 
-  private void addNodeToConfiguration(Node<T> node) {
+  private void addNode(Node<T> node) {
     Object value;
     if (node.getDefaultValue().getClass().isEnum()) {
       value = ((Enum) node.getDefaultValue()).name().toUpperCase(Locale.ENGLISH);
@@ -83,7 +83,7 @@ public class Snapshot<T extends Enum<T>> {
     nodes.add(node);
   }
 
-  private void removeNodeFromConfiguration(T id) {
+  private void removeNode(T id) {
     configuration.set(nodes.get(id).getPath(), null);
     nodes.remove(id);
   }
