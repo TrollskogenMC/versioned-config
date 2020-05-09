@@ -25,6 +25,6 @@ public class Operation<T extends Enum<T>> {
   protected enum Type {
     ADD,
     REMOVE,
-    BUMP_VERSION
+    RENAME
   }
 }

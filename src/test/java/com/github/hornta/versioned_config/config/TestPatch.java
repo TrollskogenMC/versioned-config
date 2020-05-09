@@ -10,7 +10,7 @@ public class TestPatch {
 
   @Test
   public void Test_Patch_set() {
-    Patch<PatchEnum> p = new Patch<>(1);
+    Patch<PatchEnum> p = new Patch<>();
     p.set(PatchEnum.A, "a", 1, Type.INTEGER);
     p.set(PatchEnum.B, "b", "value", Type.STRING);
     p.set(PatchEnum.C, "c", Arrays.asList(1, 2, 3), Type.LIST);
@@ -18,14 +18,14 @@ public class TestPatch {
 
   @Test
   public void Test_Patch_set_unset() {
-    Patch<PatchEnum> p = new Patch<>(1);
+    Patch<PatchEnum> p = new Patch<>();
     p.set(PatchEnum.A, "a", true, Type.BOOLEAN);
     p.unset(PatchEnum.A);
   }
 
   @Test
   public void Test_Patch_unset() {
-    Patch<PatchEnum> p = new Patch<>(1);
+    Patch<PatchEnum> p = new Patch<>();
     p.unset(PatchEnum.A);
   }
 

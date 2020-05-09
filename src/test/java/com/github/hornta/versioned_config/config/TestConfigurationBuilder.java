@@ -14,7 +14,6 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 public class TestConfigurationBuilder {
   private File file;
@@ -47,19 +46,23 @@ public class TestConfigurationBuilder {
   @Test
   public void buildUp_NoFile() throws IOException, ConfigurationException {
     ConfigurationBuilder<MyEnum> cb = new ConfigurationBuilder<>(file);
+    cb.addMigration(new Migration<>(1, () -> {
+      Patch<MyEnum> patch = new Patch<>();
+      patch.set(MyEnum.FOO, "homes", 1, Type.INTEGER);
+      return patch;
+    }));
 
-    Patch<MyEnum> patch1 = new Patch<>(1);
-    patch1.set(MyEnum.FOO, "homes", 1, Type.INTEGER);
+    cb.addMigration(new Migration<>(2, () -> {
+      Patch<MyEnum> patch = new Patch<>();
+      patch.set(MyEnum.BAR, "second_field", "a string value", Type.STRING);
+      return patch;
+    }));
 
-    Patch<MyEnum> patch2 = new Patch<>(2);
-    patch2.set(MyEnum.BAR, "second_field", "a string value", Type.STRING);
-
-    Patch<MyEnum> patch3 = new Patch<>(3);
-    patch3.unset(MyEnum.FOO);
-
-    cb.addPatch(patch1);
-    cb.addPatch(patch2);
-    cb.addPatch(patch3);
+    cb.addMigration(new Migration<>(3, () -> {
+      Patch<MyEnum> patch = new Patch<>();
+      patch.unset(MyEnum.FOO);
+      return patch;
+    }));
     cb.create();
 
     List<String> lines = Files.readAllLines(file.toPath(), Charset.defaultCharset());
@@ -80,18 +83,23 @@ public class TestConfigurationBuilder {
     configuration.save(file);
 
     ConfigurationBuilder<MyEnum> cb = new ConfigurationBuilder<>(file);
-    Patch<MyEnum> patch1 = new Patch<>(1);
-    patch1.set(MyEnum.FOO, "homes", 1, Type.INTEGER);
+    cb.addMigration(new Migration<>(1, () -> {
+      Patch<MyEnum> patch = new Patch<>();
+      patch.set(MyEnum.FOO, "homes", 1, Type.INTEGER);
+      return patch;
+    }));
 
-    Patch<MyEnum> patch2 = new Patch<>(2);
-    patch2.set(MyEnum.BAR, "second_field", "a string value", Type.STRING);
+    cb.addMigration(new Migration<>(2, () -> {
+      Patch<MyEnum> patch = new Patch<>();
+      patch.set(MyEnum.BAR, "second_field", "a string value", Type.STRING);
+      return patch;
+    }));
 
-    Patch<MyEnum> patch3 = new Patch<>(3);
-    patch3.unset(MyEnum.FOO);
-
-    cb.addPatch(patch1);
-    cb.addPatch(patch2);
-    cb.addPatch(patch3);
+    cb.addMigration(new Migration<>(3, () -> {
+      Patch<MyEnum> patch = new Patch<>();
+      patch.unset(MyEnum.FOO);
+      return patch;
+    }));
     cb.create();
 
     List<String> lines = Files.readAllLines(file.toPath(), Charset.defaultCharset());
@@ -107,24 +115,41 @@ public class TestConfigurationBuilder {
   @Test
   public void returnsQueryableConfiguration() throws ConfigurationException {
     ConfigurationBuilder<MyEnum> cb = new ConfigurationBuilder<>(file);
-    Patch<MyEnum> patch = new Patch<>(1);
-    patch.set(MyEnum.FOO, "path", "myVal", Type.STRING);
-    cb.addPatch(patch);
+    cb.addMigration(new Migration<>(1, () -> {
+      Patch<MyEnum> patch = new Patch<>();
+      patch.set(MyEnum.FOO, "path", "myVal", Type.STRING);
+      return patch;
+    }));
     Configuration<MyEnum> configuration = cb.create();
     Assert.assertEquals("myVal", configuration.get(MyEnum.FOO));
   }
 
-//  @Test
-//  public void Test_RenameField() {
-//    ConfigurationBuilder<MyEnum> cb = new ConfigurationBuilder<>(file);
-//    Patch<MyEnum> p1 = new Patch<>(1, (Configuration c) -> {
-//
-//    });
-//    p1.set(MyEnum.FOO, "field", "foo", Type.STRING);
-//    cb.addPatch(p1);
-//
-//    Patch<MyEnum> p2 = new Patch<>(2);
-//    p2.set(MyEnum.BAR, "new_field", "bar", Type.STRING);
-//    cb.addPatch();
-//  }
+  @Test
+  public void Test_Migrations() throws ConfigurationException, IOException {
+    ConfigurationBuilder<MyEnum> cb = new ConfigurationBuilder<>(file);
+    Migration<MyEnum> initial = new Migration<>(1, () -> {
+      Patch<MyEnum> p = new Patch<>();
+      p.set(MyEnum.FOO, "field", "foo", Type.STRING);
+      return p;
+    });
+    Migration<MyEnum> renameField = new Migration<>(2, (Snapshot<MyEnum> c) -> {
+      Patch<MyEnum> p = new Patch<>();
+      p.unset(MyEnum.FOO);
+      p.set(MyEnum.FOO, "new_field", c.get(MyEnum.FOO), Type.STRING);
+      return p;
+    });
+
+    cb.addMigration(initial);
+    cb.addMigration(renameField);
+    cb.create();
+
+    List<String> lines = Files.readAllLines(file.toPath(), Charset.defaultCharset());
+    Assert.assertEquals(
+      Arrays.asList(
+        "version: 2",
+        "new_field: foo"
+      ),
+      lines
+    );
+  }
 }

@@ -27,18 +27,22 @@ public class ConfigurationSpec {
   public void beforeEach() throws ConfigurationException {
     PowerMockito.mockStatic(Bukkit.class);
     file = new File("config.yml");
+    file.delete();
     ConfigurationBuilder<ConfigurationEnum> cb = new ConfigurationBuilder<>(file);
-    Patch<ConfigurationEnum> p = new Patch<>(1);
-    p.set(ConfigurationEnum.MY_BOOLEAN, "my_boolean", true, Type.BOOLEAN);
-    p.set(ConfigurationEnum.MY_COLOR, "my_color", Color.BLUE, Type.COLOR);
-    p.set(ConfigurationEnum.MY_DOUBLE, "my_double", 3.14, Type.DOUBLE);
-    p.set(ConfigurationEnum.MY_INTEGER, "my_integer", 7, Type.INTEGER);
-    p.set(ConfigurationEnum.MY_LIST, "my_list", Arrays.asList("diamond", "iron", "stone"), Type.LIST);
-    p.set(ConfigurationEnum.MY_LONG, "my_long", 3L, Type.LONG);
-    p.set(ConfigurationEnum.MY_OFFLINE_PLAYER, "my_offline_player", new FakeOfflinePlayer(), Type.OFFLINE_PLAYER);
-    p.set(ConfigurationEnum.MY_STRING, "my_string", "vallmo", Type.STRING);
-    p.set(ConfigurationEnum.MY_VECTOR, "my_vector", new Vector(1, 2, 3), Type.VECTOR);
-    cb.addPatch(p);
+
+    cb.addMigration(new Migration<>(1, () -> {
+      Patch<ConfigurationEnum> p = new Patch<>();
+      p.set(ConfigurationEnum.MY_BOOLEAN, "my_boolean", true, Type.BOOLEAN);
+      p.set(ConfigurationEnum.MY_COLOR, "my_color", Color.BLUE, Type.COLOR);
+      p.set(ConfigurationEnum.MY_DOUBLE, "my_double", 3.14, Type.DOUBLE);
+      p.set(ConfigurationEnum.MY_INTEGER, "my_integer", 7, Type.INTEGER);
+      p.set(ConfigurationEnum.MY_LIST, "my_list", Arrays.asList("diamond", "iron", "stone"), Type.LIST);
+      p.set(ConfigurationEnum.MY_LONG, "my_long", 3L, Type.LONG);
+      p.set(ConfigurationEnum.MY_OFFLINE_PLAYER, "my_offline_player", new FakeOfflinePlayer(), Type.OFFLINE_PLAYER);
+      p.set(ConfigurationEnum.MY_STRING, "my_string", "vallmo", Type.STRING);
+      p.set(ConfigurationEnum.MY_VECTOR, "my_vector", new Vector(1, 2, 3), Type.VECTOR);
+      return p;
+    }));
     configuration = cb.create();
   }
 
