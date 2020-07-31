@@ -11,7 +11,7 @@ Usage
 This package is available on Github Packages. Read more [here](https://help.github.com/en/packages/publishing-and-managing-packages/installing-a-package).
 ```xml
 <dependency>
-  <groupId>com.github.hornta</groupId>
+  <groupId>se.hornta</groupId>
   <artifactId>versioned-config</artifactId>
   <version>1.0-SNAPSHOT</version>
 </dependency>
